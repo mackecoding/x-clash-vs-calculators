@@ -236,6 +236,17 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
   .tab { flex: 1 1 0; min-width: 0; font-size: 11.5px; letter-spacing: .06em; padding-inline: 10px; text-align: left; line-height: 1.25; }
 }
 
+/* Hero Upgrade sections */
+.sec { display: grid; gap: 10px; }
+.sec-title {
+  margin: 0; display: flex; align-items: center; gap: 10px;
+  font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: .06em; text-transform: uppercase;
+  text-wrap: balance;
+}
+.sec-mark { width: 10px; height: 10px; flex: none; transform: rotate(45deg); background: var(--rune); box-shadow: 0 0 10px rgba(63,208,201,.6); }
+.amt-input { font-size: 22px; }
+#simple-tables { gap: 22px; }
+
 .note { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 62ch; }
 .note b { color: var(--fg); font-weight: 600; }
 footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); letter-spacing: .14em; text-transform: uppercase; text-align: center; }
@@ -261,7 +272,7 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
 
   <div class="tabs" role="tablist" aria-label="Calculators">
     <button type="button" class="tab" role="tab" id="tab-chest" aria-controls="panel-chest" aria-selected="true"><span class="dot"></span>Mystic Beast Mark Chest</button>
-    <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1"><span class="dot"></span>Hero EXP calculator</button>
+    <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1"><span class="dot"></span>Hero Upgrade</button>
   </div>
 
   <div class="tabpanel" role="tabpanel" id="panel-chest" aria-labelledby="tab-chest">
@@ -297,10 +308,12 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
 
   <div class="tabpanel" role="tabpanel" id="panel-hero" aria-labelledby="tab-hero" hidden>
     <div class="panel-head">
-      <h1>Hero <span class="hl">EXP</span> calculator</h1>
-      <p class="lede">Enter the amount of Hero EXP in millions (M). The points update as you type.</p>
+      <h1>Hero <span class="hl">Upgrade</span></h1>
+      <p class="lede">Fill in what you will spend on your heroes. Each table calculates its own points, and the total for all four is at the bottom.</p>
     </div>
 
+    <div class="sec">
+    <h2 class="sec-title"><span class="sec-mark"></span>Hero EXP calculator</h2>
     <section class="panel" aria-label="Hero EXP calculator">
       <div class="hero-row">
         <div class="cell">
@@ -325,13 +338,26 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
         <span class="eq">= <span id="f-pts">0</span> points</span>
       </div>
     </section>
+    </div>
+
+    <div id="simple-tables" class="tabpanel"></div>
+
+    <section class="panel" aria-label="Hero Upgrade total">
+      <div class="total">
+        <div class="total-label">
+          <b>Hero Upgrade total</b>
+          <small>All four tables combined</small>
+        </div>
+        <div class="total-value" id="hero-total" aria-live="polite">0</div>
+      </div>
+    </section>
 
     <div class="actions">
-      <button type="button" id="hero-clear" class="primary">Clear</button>
+      <button type="button" id="hero-clear" class="primary">Clear all</button>
       <button type="button" id="hero-example">Load example</button>
     </div>
 
-    <p class="note"><b>Points</b> = 2 × (Amount EXP (M) × 1 000 000 ÷ 660). Only full blocks of 660 EXP count, so the leftover EXP is shown separately. Decimals work too, for example 1.5 for 1 500 000 EXP. “Load example” fills in 6 660 (6 660 000 000 EXP), which gives 10 090 909 × 2 = 20 181 818 points.</p>
+    <p class="note"><b>Hero EXP:</b> Points = 2 × (Amount EXP (M) × 1 000 000 ÷ 660). Only full blocks of 660 EXP count, so the leftover EXP is shown separately. Decimals work, for example 1.5 for 1 500 000 EXP.<br><b>Recruits and shards:</b> Points = fixed points × amount.<br>“Load example” fills in 6 660 M EXP, 10 vouchers, 2 S+ Shards and 5 S Shards, which adds up to 20 294 318 points.</p>
   </div>
 
   <footer>Immortals union · for the hunt</footer>
@@ -426,12 +452,78 @@ function calcHero() {
   }
   try { localStorage.setItem("hero-exp", expIn.value); } catch (e) {}
 }
-expIn.addEventListener("input", calcHero);
-expIn.addEventListener("keydown", e => { if (e.key === "-" || e.key === "e") e.preventDefault(); });
-document.getElementById("hero-clear").addEventListener("click", () => { expIn.value = ""; calcHero(); expIn.focus(); });
-document.getElementById("hero-example").addEventListener("click", () => { expIn.value = 6660; calcHero(); });
-try { const v = localStorage.getItem("hero-exp"); if (v) expIn.value = v; } catch (e) {}
-calcHero();
+/* ---- Recruit & shard tables ---- */
+const SIMPLE = [
+  { id: "recruit", title: "Perform 1 Hero Recruit", pts: 3750,  ptsLabel: "Points for every hero recruit", label: "Amount of vouchers",  unit: "vouchers",  ex: 10 },
+  { id: "splus",   title: "Use 1 S+ Shard",         pts: 20000, ptsLabel: "Points for every S+ shard",     label: "Amount of S+ Shards", unit: "S+ Shards", ex: 2 },
+  { id: "s",       title: "Use 1 S Shard",          pts: 7000,  ptsLabel: "Points for every S shard",      label: "Amount of S Shards",  unit: "S Shards",  ex: 5 }
+];
+document.getElementById("simple-tables").innerHTML = SIMPLE.map(t => `
+  <div class="sec">
+    <h2 class="sec-title"><span class="sec-mark"></span>${t.title}</h2>
+    <section class="panel" aria-label="${t.title}">
+      <div class="hero-row">
+        <div class="cell">
+          <span class="cell-label">${t.ptsLabel}</span>
+          <span class="big fixed">${fmt(t.pts)}</span>
+          <span class="sub">Fixed</span>
+        </div>
+        <div class="cell">
+          <label class="cell-label" for="amt-${t.id}">${t.label}</label>
+          <input class="exp-input amt-input" id="amt-${t.id}" type="number" inputmode="numeric" min="0" step="1" placeholder="0">
+          <span class="sub">&nbsp;</span>
+        </div>
+        <div class="cell out">
+          <span class="cell-label">Points</span>
+          <span class="big" id="pts-${t.id}" aria-live="polite">0</span>
+          <span class="sub" id="sub-${t.id}">${fmt(t.pts)} × 0</span>
+        </div>
+      </div>
+    </section>
+  </div>`).join("");
+
+const simpleIn = SIMPLE.map(t => document.getElementById("amt-" + t.id));
+const lastSimple = SIMPLE.map(() => 0);
+function calcSimple() {
+  let total = 0;
+  SIMPLE.forEach((t, i) => {
+    const raw = simpleIn[i].value.trim();
+    const n = raw === "" ? 0 : Math.max(0, Math.floor(Number(raw)) || 0);
+    const pts = t.pts * n;
+    total += pts;
+    const el = document.getElementById("pts-" + t.id);
+    el.textContent = fmt(pts);
+    document.getElementById("sub-" + t.id).textContent = fmt(t.pts) + " × " + fmt(n);
+    if (pts !== lastSimple[i]) { el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); lastSimple[i] = pts; }
+    try { localStorage.setItem("hero-" + t.id, simpleIn[i].value); } catch (e) {}
+  });
+  return total;
+}
+
+const heroTotal = document.getElementById("hero-total");
+let lastHeroTotal = 0;
+function calcHeroAll() {
+  calcHero();
+  const total = lastHero + calcSimple();
+  heroTotal.textContent = fmt(total);
+  if (total !== lastHeroTotal) { heroTotal.classList.remove("pulse"); void heroTotal.offsetWidth; heroTotal.classList.add("pulse"); lastHeroTotal = total; }
+}
+
+[expIn, ...simpleIn].forEach(inp => {
+  inp.addEventListener("input", calcHeroAll);
+  inp.addEventListener("keydown", e => { if (e.key === "-" || e.key === "e" || (inp !== expIn && (e.key === "," || e.key === "."))) e.preventDefault(); });
+});
+document.getElementById("hero-clear").addEventListener("click", () => {
+  expIn.value = ""; simpleIn.forEach(x => x.value = ""); calcHeroAll(); expIn.focus();
+});
+document.getElementById("hero-example").addEventListener("click", () => {
+  expIn.value = 6660; simpleIn.forEach((x, i) => x.value = SIMPLE[i].ex); calcHeroAll();
+});
+try {
+  const v = localStorage.getItem("hero-exp"); if (v) expIn.value = v;
+  SIMPLE.forEach((t, i) => { const w = localStorage.getItem("hero-" + t.id); if (w) simpleIn[i].value = w; });
+} catch (e) {}
+calcHeroAll();
 
 /* ---- Tabs ---- */
 const tabs = [...document.querySelectorAll('[role="tab"]')];
