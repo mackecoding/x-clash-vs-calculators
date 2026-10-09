@@ -381,6 +381,33 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
 .danger:hover { border-color: var(--ember); color: var(--ember); }
 .danger.confirm { background: var(--ember); border-color: var(--ember); color: var(--fg); }
 
+
+/* Team balancer */
+:root { --t-pool: #8fb0d0; }
+.balancer { margin-top: 4px; }
+.bal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 4px 16px 14px; }
+.bal-hint { color: var(--muted); font-size: 13px; }
+#bal-result { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 12px; }
+#bal-result[hidden] { display: none; }
+.bal-summary { padding: 0 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+.bal-chip { font-family: var(--f-num); font-size: 12.5px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: var(--muted); }
+.bal-chip b { color: var(--fg); }
+.bal-chip.good { border-color: color-mix(in srgb, var(--rune) 50%, var(--line)); }
+.bal-chip.good b { color: var(--rune); }
+.bal-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 16px; }
+@container (max-width: 520px) { .bal-grid { grid-template-columns: 1fr; } }
+.bal-team { border: 1px solid color-mix(in srgb, var(--tc) 35%, var(--line)); border-radius: 3px; background: color-mix(in srgb, var(--tc) 6%, var(--bg)); padding: 10px 12px; display: grid; gap: 6px; min-width: 0; }
+.bal-team h3 { margin: 0; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-family: var(--f-display); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--tc); }
+.bal-team h3 span { font-family: var(--f-num); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--muted); }
+.bal-team ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.bal-team li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; font-size: 14px; }
+.bal-team li span:first-child { overflow-wrap: anywhere; }
+.bal-team li .l { font-family: var(--f-num); font-size: 12.5px; color: var(--muted); }
+.bal-team li .c { font-family: var(--f-num); font-variant-numeric: tabular-nums; text-align: right; min-width: 4.5em; }
+.bal-team .tot { border-top: 1px solid var(--line); padding-top: 6px; display: flex; justify-content: space-between; font-family: var(--f-num); font-size: 13px; }
+.bal-team .tot b { color: var(--fg); }
+#bal-msg { padding: 0 16px 14px; }
+
 .note { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 62ch; }
 .note b { color: var(--fg); font-weight: 600; }
 footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); letter-spacing: .14em; text-transform: uppercase; text-align: center; }
@@ -534,6 +561,39 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
     </section>
 
     <p class="note"><b>Amount of CP (M)</b> is in millions: type 45 for 45 M or 38,5 for 38.5 M. A full number such as 45 000 000 also works. <b>Level</b> is required and must be a whole number from 0 to 30. Each player can be signed up once. If a new name looks like one already on the list, you get a warning and can click Sign up again to add the player anyway. To move a player to another team, remove them and add them again.</p>
+
+    <section class="panel team balancer" id="balancer" style="--tc:var(--t-pool)" aria-label="Team balancer">
+      <div class="team-head">
+        <h2>Team balancer</h2><span class="zones">Splits 16 players evenly into the four teams</span>
+        <div class="team-stats"><span><b id="pool-cnt">0</b> / 16 players</span><span><b id="pool-cp">0</b> M CP</span><span>avg Lv <b id="pool-lv">–</b></span></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="roster">
+          <thead><tr><th>Player name</th><th class="lv">Level</th><th class="r">Amount of CP (M)</th><th><span hidden>Remove</span></th></tr></thead>
+          <tbody id="pool-list"></tbody>
+        </table>
+      </div>
+      <form class="signup" id="pool-form" novalidate>
+        <input id="pool-name" type="text" maxlength="40" placeholder="Player name" aria-label="Player name for the balancer" autocomplete="off">
+        <input id="pool-lvl" class="lvin" type="text" inputmode="numeric" placeholder="Lv 0–30" aria-label="Level, 0 to 30" autocomplete="off">
+        <input id="pool-cp-in" class="cpin" type="text" inputmode="decimal" placeholder="CP (M)" aria-label="Amount of CP in millions" autocomplete="off">
+        <button type="submit">Add</button>
+        <p class="msg" id="pool-msg" role="status"></p>
+      </form>
+      <div class="bal-actions">
+        <button type="button" id="bal-run" class="primary">Balance teams</button>
+        <button type="button" id="pool-clear" class="danger">Clear list</button>
+      </div>
+      <div id="bal-result" hidden>
+        <div class="bal-summary" id="bal-summary"></div>
+        <div class="bal-grid" id="bal-grid"></div>
+        <div class="bal-actions">
+          <button type="button" id="bal-apply" class="primary">Apply to team tables</button>
+          <span class="bal-hint">Replaces the players in Team NW, SW, NE and SE. Big Hitters are not touched.</span>
+        </div>
+      </div>
+      <p class="msg" id="bal-msg" role="status"></p>
+    </section>
   </div>
 
   <footer>Immortals union · for the hunt</footer>
@@ -919,7 +979,7 @@ clearBtn.addEventListener("click", () => {
 
 const backupArea = document.getElementById("ruins-backup"), backupMsg = document.getElementById("ruins-backup-msg");
 document.getElementById("ruins-backup-copy").addEventListener("click", () => {
-  const code = "RUINS1:" + btoa(unescape(encodeURIComponent(JSON.stringify(ruins))));
+  const code = "RUINS1:" + btoa(unescape(encodeURIComponent(JSON.stringify({ ...ruins, pool }))));
   copyText(code, backupArea, backupMsg, "Backup code copied. Keep it somewhere safe.");
 });
 document.getElementById("ruins-restore").addEventListener("click", () => {
@@ -931,11 +991,201 @@ document.getElementById("ruins-restore").addEventListener("click", () => {
     const next = emptyRuins();
     TEAMS.forEach(t => { (data[t.id] || []).forEach(p => { if (p && typeof p.name === "string" && Number.isFinite(p.cp)) next[t.id].push({ name: p.name.slice(0, 40), level: /^\d{1,2}$/.test(String(p.level)) && Number(p.level) <= 30 ? String(Number(p.level)) : "", cp: Math.max(0, Math.round(p.cp)) }); }); });
     ruins = next; saveRuins(); renderRuins();
+    if (Array.isArray(data.pool)) { pool = data.pool.map(cleanPlayer).filter(Boolean).slice(0, 16); savePool(); renderPool(); hideBalance(); }
     const n = TEAMS.reduce((a, t) => a + next[t.id].length, 0);
     backupMsg.className = "msg ok"; backupMsg.textContent = `Restored ${n} sign-ups.`; backupArea.value = "";
   } catch (e) { backupMsg.textContent = "The backup code is damaged or incomplete. Copy the whole code and try again."; }
 });
 renderRuins();
+
+/* ---- Team balancer ---- */
+const PKEY = "ruins-pool";
+const BAL_TEAMS = TEAMS.filter(t => !t.noSquads);
+let pool = [];
+const cleanPlayer = p => (p && typeof p.name === "string" && Number.isFinite(p.cp))
+  ? { name: p.name.slice(0, 40), level: /^\d{1,2}$/.test(String(p.level)) && Number(p.level) <= 30 ? String(Number(p.level)) : "", cp: Math.max(0, Math.round(p.cp)) } : null;
+try { const sp = JSON.parse(localStorage.getItem(PKEY) || "null"); if (Array.isArray(sp)) pool = sp.map(cleanPlayer).filter(Boolean); } catch (e) {}
+function savePool() { try { localStorage.setItem(PKEY, JSON.stringify(pool)); } catch (e) {} }
+
+function similarIn(name, groups) {
+  const a = normName(name); if (!a) return [];
+  const hits = [];
+  groups.forEach(g => g.players.forEach(p => {
+    const b = normName(p.name); if (!b) return;
+    const limit = Math.min(a.length, b.length) <= 5 ? 1 : 2;
+    const contains = Math.min(a.length, b.length) >= 4 && (a.includes(b) || b.includes(a));
+    if (a === b || contains || editDistance(a, b) <= limit) hits.push({ name: p.name, team: g.label });
+  }));
+  return hits;
+}
+const poolGroups = () => [{ label: "balancer list", players: pool }, { label: "Big Hitters", players: ruins.bh }];
+
+let lastBalance = null;
+function renderPool() {
+  const list = pool.slice().sort((a, b) => b.cp - a.cp);
+  document.getElementById("pool-list").innerHTML = list.length ? list.map(p => `
+    <tr><td class="name">${esc(p.name)}</td><td class="lv">${esc(p.level)}</td><td class="cp r">${fmtM(p.cp)}</td>
+    <td class="x"><button type="button" class="del" data-pool="${esc(p.name)}" aria-label="Remove ${esc(p.name)}">✕</button></td></tr>`).join("")
+    : `<tr class="empty"><td colspan="4">Add the 16 players who will play in the four teams</td></tr>`;
+  document.getElementById("pool-cnt").textContent = pool.length;
+  document.getElementById("pool-cp").textContent = fmtM(sumCP(pool));
+  document.getElementById("pool-lv").textContent = pool.length ? (pool.reduce((a, p) => a + Number(p.level), 0) / pool.length).toLocaleString("sv-SE", { maximumFractionDigits: 1 }) : "–";
+}
+
+let pendingPoolSimilar = null;
+document.getElementById("pool-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const nameIn = document.getElementById("pool-name"), lvIn = document.getElementById("pool-lvl"), cpIn = document.getElementById("pool-cp-in");
+  const msg = document.getElementById("pool-msg");
+  const name = nameIn.value.trim().replace(/\s+/g, " ");
+  const level = lvIn.value.trim();
+  const cp = parseCP(cpIn.value);
+  msg.className = "msg err";
+  if (!name) { msg.textContent = "Type the player name."; nameIn.focus(); return; }
+  if (!level) { msg.textContent = "Type the player's level."; lvIn.focus(); return; }
+  if (!/^\d{1,2}$/.test(level) || Number(level) > 30) { msg.textContent = "Level must be a whole number from 0 to 30."; lvIn.focus(); lvIn.select(); return; }
+  if (!Number.isFinite(cp) || cp <= 0) { msg.textContent = "Type CP in millions, for example 45 or 38,5."; cpIn.focus(); return; }
+  const key = name.toLowerCase();
+  if (pool.some(p => p.name.toLowerCase() === key)) { msg.textContent = `${name} is already on the balancer list.`; return; }
+  if (ruins.bh.some(p => p.name.toLowerCase() === key)) { msg.textContent = `${name} is signed up as a Big Hitter. Remove them there first.`; return; }
+  if (pool.length >= 16) { msg.textContent = "The list already has 16 players. Remove one before adding another."; return; }
+  const similar = similarIn(name, poolGroups());
+  if (similar.length && pendingPoolSimilar !== key) {
+    pendingPoolSimilar = key;
+    msg.className = "msg warn";
+    msg.textContent = `Similar name already listed: ${similar.map(h => `${h.name} (${h.team})`).join(", ")}. Check that it is not the same player. Click Add again to add ${name} anyway.`;
+    return;
+  }
+  pendingPoolSimilar = null;
+  pool.push({ name, level: String(Number(level)), cp });
+  savePool(); renderPool(); hideBalance();
+  msg.className = "msg ok";
+  msg.textContent = pool.length === 16 ? `${name} added. All 16 players are in, so you can balance the teams now.` : `${name} added (${pool.length} of 16).`;
+  nameIn.value = ""; lvIn.value = ""; cpIn.value = ""; nameIn.focus();
+});
+
+let pendingPoolDel = null;
+document.getElementById("pool-list").addEventListener("click", e => {
+  const b = e.target.closest(".del"); if (!b) return;
+  if (pendingPoolDel === b) {
+    pool = pool.filter(p => p.name !== b.dataset.pool); pendingPoolDel = null;
+    savePool(); renderPool(); hideBalance();
+    const m = document.getElementById("pool-msg"); m.className = "msg ok"; m.textContent = `${b.dataset.pool} removed.`;
+    return;
+  }
+  if (pendingPoolDel) { pendingPoolDel.classList.remove("confirm"); pendingPoolDel.textContent = "✕"; }
+  pendingPoolDel = b; b.classList.add("confirm"); b.textContent = "Confirm";
+  setTimeout(() => { if (pendingPoolDel === b) { b.classList.remove("confirm"); b.textContent = "✕"; pendingPoolDel = null; } }, 4000);
+});
+
+const poolClear = document.getElementById("pool-clear");
+let poolClearArmed = false;
+poolClear.addEventListener("click", () => {
+  if (!poolClearArmed) {
+    poolClearArmed = true; poolClear.classList.add("confirm"); poolClear.textContent = "Click again to clear the list";
+    setTimeout(() => { poolClearArmed = false; poolClear.classList.remove("confirm"); poolClear.textContent = "Clear list"; }, 4000);
+    return;
+  }
+  poolClearArmed = false; poolClear.classList.remove("confirm"); poolClear.textContent = "Clear list";
+  pool = []; savePool(); renderPool(); hideBalance();
+  const m = document.getElementById("pool-msg"); m.className = "msg ok"; m.textContent = "Balancer list cleared.";
+});
+
+/* Balancing: equal team sizes; minimise the gap between the strongest and weakest team in total CP (main goal)
+   and in average level (second goal). Many random starts, each improved by swapping players between teams
+   until no swap helps; the best result wins. */
+function balanceTeams(players, k) {
+  const n = players.length;
+  const cps = players.map(p => p.cp), lvs = players.map(p => Number(p.level));
+  const avgCP = cps.reduce((a, b) => a + b, 0) / k || 1;
+  const avgLv = lvs.reduce((a, b) => a + b, 0) / k || 1;
+  // snake order (0,1,2,3,3,2,1,0,...) gives every team the same size, ±1 when n is not divisible by k
+  const snake = i => { const r = Math.floor(i / k), c = i % k; return r % 2 ? k - 1 - c : c; };
+  const sizes = new Array(k).fill(0); for (let i = 0; i < n; i++) sizes[snake(i)]++;
+  const cost = (cpT, lvT) => {
+    const lvAvg = lvT.map((v, i) => v / (sizes[i] || 1));
+    return (Math.max(...cpT) - Math.min(...cpT)) / avgCP + 0.35 * (Math.max(...lvAvg) - Math.min(...lvAvg)) / ((avgLv / (n / k)) || 1);
+  };
+  let rng = 20261009;
+  const rand = () => ((rng = (rng * 1103515245 + 12345) % 2147483648) / 2147483648);
+  let best = null, bestCost = Infinity;
+  const byCP = players.map((_, i) => i).sort((x, y) => cps[y] - cps[x]);
+  for (let run = 0; run < 400; run++) {
+    // run 0: snake draft by CP; later runs: random order (Fisher–Yates), same snake seats
+    const idx = byCP.slice();
+    if (run > 0) for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
+    const team = new Array(n);
+    idx.forEach((pi, pos) => { team[pi] = snake(pos); });
+    const cpT = new Array(k).fill(0), lvT = new Array(k).fill(0);
+    team.forEach((t, i) => { cpT[t] += cps[i]; lvT[t] += lvs[i]; });
+    let cur = cost(cpT, lvT), improved = true;
+    while (improved) {
+      improved = false;
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const ta = team[i], tb = team[j]; if (ta === tb) continue;
+        cpT[ta] += cps[j] - cps[i]; cpT[tb] += cps[i] - cps[j]; lvT[ta] += lvs[j] - lvs[i]; lvT[tb] += lvs[i] - lvs[j];
+        const c = cost(cpT, lvT);
+        if (c < cur - 1e-12) { cur = c; team[i] = tb; team[j] = ta; improved = true; }
+        else { cpT[ta] -= cps[j] - cps[i]; cpT[tb] -= cps[i] - cps[j]; lvT[ta] -= lvs[j] - lvs[i]; lvT[tb] -= lvs[i] - lvs[j]; }
+      }
+    }
+    if (cur < bestCost) { bestCost = cur; best = team.slice(); }
+  }
+  const groups = Array.from({ length: k }, () => []);
+  best.forEach((t, i) => groups[t].push(players[i]));
+  // strongest team first so the result is easy to read
+  return groups.map(g => g.sort((a, b) => b.cp - a.cp)).sort((a, b) => sumCP(b) - sumCP(a));
+}
+
+function hideBalance() { lastBalance = null; document.getElementById("bal-result").hidden = true; }
+const avgLevel = g => g.reduce((a, p) => a + Number(p.level), 0) / (g.length || 1);
+const fmt1 = n => n.toLocaleString("sv-SE", { maximumFractionDigits: 1 });
+
+document.getElementById("bal-run").addEventListener("click", () => {
+  const m = document.getElementById("bal-msg");
+  if (pool.length < 4) { m.className = "msg err"; m.textContent = "Add at least 4 players to the list first (16 for full teams)."; hideBalance(); return; }
+  const groups = balanceTeams(pool, 4);
+  lastBalance = groups;
+  const totals = groups.map(sumCP), lvAvgs = groups.map(avgLevel);
+  const gap = Math.max(...totals) - Math.min(...totals);
+  const gapPct = gap / (totals.reduce((a, b) => a + b, 0) / 4) * 100;
+  const lvGap = Math.max(...lvAvgs) - Math.min(...lvAvgs);
+  document.getElementById("bal-summary").innerHTML = `
+    <span class="bal-chip${gapPct < 3 ? " good" : ""}">CP gap strongest–weakest <b>${fmtM(gap)} M</b> (${fmt1(gapPct)} %)</span>
+    <span class="bal-chip${lvGap <= 1 ? " good" : ""}">Avg level range <b>${fmt1(Math.min(...lvAvgs))}–${fmt1(Math.max(...lvAvgs))}</b></span>`;
+  document.getElementById("bal-grid").innerHTML = groups.map((g, i) => {
+    const t = BAL_TEAMS[i];
+    return `<div class="bal-team" style="--tc:var(--t-${t.id})">
+      <h3>${t.name} <span>${g.length} players</span></h3>
+      <ol>${g.map(p => `<li><span>${esc(p.name)}</span><span class="l">Lv ${esc(p.level)}</span><span class="c">${fmtM(p.cp)}</span></li>`).join("")}</ol>
+      <div class="tot"><span>Σ <b>${fmtM(sumCP(g))} M</b></span><span>avg Lv <b>${fmt1(avgLevel(g))}</b></span></div>
+    </div>`;
+  }).join("");
+  document.getElementById("bal-result").hidden = false;
+  m.className = "msg ok";
+  m.textContent = pool.length === 16 ? "Here is the most even split found. Check it, then apply it to the team tables." : `Split for ${pool.length} players. With fewer than 16, some teams get fewer players.`;
+});
+
+const balApply = document.getElementById("bal-apply");
+let applyArmed = false;
+balApply.addEventListener("click", () => {
+  const m = document.getElementById("bal-msg");
+  if (!lastBalance) return;
+  const clash = lastBalance.flat().filter(p => ruins.bh.some(b => b.name.toLowerCase() === p.name.toLowerCase()));
+  if (clash.length) { m.className = "msg err"; m.textContent = `Also signed up as Big Hitters: ${clash.map(p => p.name).join(", ")}. Remove them from one of the lists first.`; return; }
+  const existing = BAL_TEAMS.reduce((a, t) => a + ruins[t.id].length, 0);
+  if (existing && !applyArmed) {
+    applyArmed = true; balApply.classList.add("confirm"); balApply.textContent = `Click again to replace ${existing} current team players`;
+    setTimeout(() => { applyArmed = false; balApply.classList.remove("confirm"); balApply.textContent = "Apply to team tables"; }, 5000);
+    return;
+  }
+  applyArmed = false; balApply.classList.remove("confirm"); balApply.textContent = "Apply to team tables";
+  BAL_TEAMS.forEach((t, i) => { ruins[t.id] = lastBalance[i].map(p => ({ ...p })); });
+  saveRuins(); renderRuins();
+  m.className = "msg ok"; m.textContent = "Applied. The four team tables and their squads are updated.";
+  document.querySelector("#panel-ruins .map").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+});
+renderPool();
 
 /* ---- Tabs ---- */
 const tabs = [...document.querySelectorAll('[role="tab"]')];
