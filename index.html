@@ -306,6 +306,36 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
 .roster td.lv { font-family: var(--f-num); color: var(--muted); white-space: nowrap; }
 .signup input.lvin { font-family: var(--f-num); }
 .msg.warn { color: var(--gold); }
+.sq-tag {
+  display: inline-block; margin-left: 4px; padding: 1px 5px; vertical-align: 1px;
+  font-family: var(--f-num); font-size: 10.5px; font-weight: 700; letter-spacing: .04em;
+  color: var(--tc); border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); border-radius: 2px;
+}
+.squads { display: grid; gap: 6px; padding: 12px 16px 4px; border-top: 1px solid var(--line); }
+.squads:empty { display: none; }
+.sq-title { font-family: var(--f-display); font-size: 11.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--tc); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.sq-title span { font-family: var(--f-body); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--muted); font-weight: 400; }
+.sq {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px 12px;
+  padding: 8px 10px; background: color-mix(in srgb, var(--tc) 7%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--tc) 22%, var(--line)); border-radius: 3px;
+}
+.sq.solo { border-style: dashed; }
+.sq-label { font-family: var(--f-display); font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--tc); white-space: nowrap; }
+.sq-players { display: grid; gap: 2px; min-width: 0; }
+.sq-players span { overflow-wrap: anywhere; }
+.sq-players b { font-weight: 600; }
+.sq-players em { font-style: normal; font-family: var(--f-num); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.sq-note { font-size: 12.5px; color: var(--gold); }
+.sq-total { font-family: var(--f-num); font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+.sq-total::before { content: "Σ "; color: var(--muted); font-weight: 500; }
+.team { container-type: inline-size; }
+@container (max-width: 460px) {
+  .sq { grid-template-columns: minmax(0, 1fr) auto; }
+  .sq-players { grid-column: 1 / -1; grid-row: 2; }
+  .team .signup { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .team .signup input[id^="name-"], .team .signup button { grid-column: 1 / -1; }
+}
 @media (max-width: 520px) {
   .roster th, .roster td { padding-inline: 8px; }
   .roster th:first-child, .roster td:first-child { padding-left: 14px; }
@@ -336,7 +366,7 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
 .msg.err { color: var(--ember); }
 .msg.ok { color: var(--rune); }
 @media (max-width: 420px) {
-  .signup { grid-template-columns: minmax(0, .6fr) minmax(0, 1fr); }
+  .signup { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .signup input[id^="name-"], .signup button { grid-column: 1 / -1; }
 }
 .export { display: grid; gap: 12px; padding: 16px; }
@@ -503,7 +533,7 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
       <p id="ruins-backup-msg" class="msg" role="status"></p>
     </section>
 
-    <p class="note"><b>CP</b> can be typed in full (45 000 000) or short (45M, 45.5M, 900K). <b>Level</b> is required. Each player can be signed up once. If a new name looks like one already on the list, you get a warning and can click Sign up again to add the player anyway. To move a player to another team, remove them and add them again.</p>
+    <p class="note"><b>Amount of CP (M)</b> is in millions: type 45 for 45 M or 38,5 for 38.5 M. A full number such as 45 000 000 also works. <b>Level</b> is required and must be a whole number from 0 to 30. Each player can be signed up once. If a new name looks like one already on the list, you get a warning and can click Sign up again to add the player anyway. To move a player to another team, remove them and add them again.</p>
   </div>
 
   <footer>Immortals union · for the hunt</footer>
@@ -677,7 +707,7 @@ const TEAMS = [
   { id: "sw", name: "Team SW", zones: "1.3 + 1.4" },
   { id: "ne", name: "Team NE", zones: "3.1 + 3.2" },
   { id: "se", name: "Team SE", zones: "3.3 + 3.4" },
-  { id: "bh", name: "Big Hitters", zones: "Free roam", note: "Free roam · assist all teams" }
+  { id: "bh", name: "Big Hitters", zones: "Free roam", note: "Free roam · assist all teams", noSquads: true }
 ];
 const RKEY = "ruins-signups";
 const emptyRuins = () => Object.fromEntries(TEAMS.map(t => [t.id, []]));
@@ -688,37 +718,42 @@ try {
 } catch (e) {}
 function saveRuins() { try { localStorage.setItem(RKEY, JSON.stringify(ruins)); } catch (e) {} }
 
+/* CP is entered in millions: "45" or "45.5" = 45 / 45.5 M. "45M" and "900K" also work, and a full number (100 000 or more, e.g. 45 000 000) is read as exact CP. */
 function parseCP(str) {
   let v = String(str).trim().toLowerCase().replace(/\s|\u00a0/g, "");
   if (!v) return NaN;
-  let mult = 1;
+  let mult = 1e6, full = false;
   if (/[mk]$/.test(v)) { mult = v.endsWith("m") ? 1e6 : 1e3; v = v.slice(0, -1).replace(",", "."); }
-  else if (/^\d{1,3}([.,]\d{3})+$/.test(v)) { v = v.replace(/[.,]/g, ""); }
+  else if (/^\d{1,3}([.,]\d{3}){2,}$/.test(v)) { v = v.replace(/[.,]/g, ""); full = true; }
   else { v = v.replace(",", "."); }
   if (!/^\d+(\.\d+)?$/.test(v)) return NaN;
-  return Math.round(parseFloat(v) * mult);
+  const n = parseFloat(v);
+  if (full || (mult === 1e6 && !/[m]$/.test(String(str).trim().toLowerCase()) && n >= 100000)) return Math.round(n);
+  return Math.round(n * mult);
 }
+const fmtM = n => (n / 1e6).toLocaleString("sv-SE", { maximumFractionDigits: 2 }).replace(/\u00a0/g, " ");
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sumCP = list => list.reduce((a, p) => a + p.cp, 0);
-const shortCP = n => n >= 1e6 ? (n / 1e6).toLocaleString("sv-SE", { maximumFractionDigits: 1 }).replace(/\u00a0/g, " ") + "M" : fmt(n);
+const shortCP = n => fmtM(n) + "M";
 
 const teamsEl = document.getElementById("teams");
 teamsEl.innerHTML = TEAMS.map(t => `
   <section class="panel team${t.id === "bh" ? " team-wide" : ""}" id="team-${t.id}" style="--tc:var(--t-${t.id})" aria-label="${t.name}">
     <div class="team-head">
       <h2>${t.name}</h2><span class="zones">${t.note || "Zones " + t.zones}</span>
-      <div class="team-stats"><span><b id="cnt-${t.id}">0</b> <span id="cntw-${t.id}">players</span></span><span><b id="tcp-${t.id}">0</b> CP</span></div>
+      <div class="team-stats"><span><b id="cnt-${t.id}">0</b> <span id="cntw-${t.id}">players</span></span><span><b id="tcp-${t.id}">0</b> M CP</span></div>
     </div>
     <div style="overflow-x:auto">
       <table class="roster">
-        <thead><tr><th>Player name</th><th class="lv">Level</th><th class="r">Amount of CP</th><th><span hidden>Remove</span></th></tr></thead>
+        <thead><tr><th>Player name</th><th class="lv">Level</th><th class="r">Amount of CP (M)</th><th><span hidden>Remove</span></th></tr></thead>
         <tbody id="list-${t.id}"></tbody>
       </table>
     </div>
+    <div class="squads" id="sq-${t.id}"></div>
     <form class="signup" data-team="${t.id}" novalidate>
       <input id="name-${t.id}" type="text" maxlength="40" placeholder="Player name" aria-label="Player name for ${t.name}" autocomplete="off">
-      <input id="lvl-${t.id}" class="lvin" type="text" inputmode="numeric" maxlength="8" placeholder="Level" aria-label="Level for ${t.name}" autocomplete="off">
-      <input id="cp-${t.id}" class="cpin" type="text" inputmode="decimal" placeholder="CP (45M)" aria-label="Amount of CP for ${t.name}" autocomplete="off">
+      <input id="lvl-${t.id}" class="lvin" type="text" inputmode="numeric" placeholder="Lv 0–30" aria-label="Level for ${t.name}, 0 to 30" autocomplete="off">
+      <input id="cp-${t.id}" class="cpin" type="text" inputmode="decimal" placeholder="CP (M)" aria-label="Amount of CP in millions for ${t.name}" autocomplete="off">
       <button type="submit">Sign up</button>
       <p class="msg" id="msg-${t.id}" role="status"></p>
     </form>
@@ -727,18 +762,35 @@ teamsEl.innerHTML = TEAMS.map(t => `
 function renderRuins() {
   TEAMS.forEach(t => {
     const list = ruins[t.id].slice().sort((a, b) => b.cp - a.cp);
+    const squads = t.noSquads ? [] : makeSquads(list);
+    const squadOf = new Map();
+    squads.forEach((sq, i) => sq.forEach(p => squadOf.set(p, i + 1)));
     const body = document.getElementById("list-" + t.id);
     body.innerHTML = list.length ? list.map((p, i) => `
-      <tr><td class="name">${esc(p.name)}</td><td class="lv">${p.level ? esc(p.level) : "–"}</td><td class="cp r">${fmt(p.cp)}</td>
+      <tr><td class="name">${esc(p.name)}${!t.noSquads && list.length > 1 ? ` <span class="sq-tag" title="Squad ${squadOf.get(p)}">S${squadOf.get(p)}</span>` : ""}</td><td class="lv">${p.level ? esc(p.level) : "–"}</td><td class="cp r">${fmtM(p.cp)}</td>
       <td class="x"><button type="button" class="del" data-team="${t.id}" data-name="${esc(p.name)}" aria-label="Remove ${esc(p.name)}">✕</button></td></tr>`).join("")
       : `<tr class="empty"><td colspan="4">No players yet</td></tr>`;
     const total = sumCP(list);
     document.getElementById("cnt-" + t.id).textContent = list.length;
     document.getElementById("cntw-" + t.id).textContent = list.length === 1 ? "player" : "players";
-    document.getElementById("tcp-" + t.id).textContent = fmt(total);
+    document.getElementById("tcp-" + t.id).textContent = fmtM(total);
     const badge = document.getElementById("badge-" + t.id);
     if (badge) badge.textContent = list.length + " · " + shortCP(total);
+    const sqEl = document.getElementById("sq-" + t.id);
+    sqEl.innerHTML = t.noSquads || list.length < 2 ? "" : `<div class="sq-title">Squads <span>highest CP paired with lowest</span></div>` + squads.map((sq, i) => `
+      <div class="sq${sq.length === 1 ? " solo" : ""}">
+        <span class="sq-label">Squad ${i + 1}</span>
+        <div class="sq-players">${sq.map(p => `<span><b>${esc(p.name)}</b> <em>Lv ${esc(p.level || "–")} · ${shortCP(p.cp)}</em></span>`).join("")}${sq.length === 1 ? `<span class="sq-note">No partner yet</span>` : ""}</div>
+        <span class="sq-total">${fmtM(sumCP(sq))} M</span>
+      </div>`).join("");
   });
+}
+
+/* Pair highest with lowest, second highest with second lowest, and so on. An odd player out (the middle one) gets a squad of their own. */
+function makeSquads(sorted) {
+  const out = [];
+  for (let i = 0, j = sorted.length - 1; i <= j; i++, j--) out.push(i === j ? [sorted[i]] : [sorted[i], sorted[j]]);
+  return out;
 }
 
 function findPlayer(name) {
@@ -782,12 +834,13 @@ teamsEl.addEventListener("submit", e => {
   const nameIn = document.getElementById("name-" + tid), cpIn = document.getElementById("cp-" + tid), lvIn = document.getElementById("lvl-" + tid);
   const msg = document.getElementById("msg-" + tid);
   const name = nameIn.value.trim().replace(/\s+/g, " ");
-  const level = lvIn.value.trim().slice(0, 8);
+  const level = lvIn.value.trim();
   const cp = parseCP(cpIn.value);
   msg.className = "msg err";
   if (!name) { msg.textContent = "Type the player name."; nameIn.focus(); return; }
   if (!level) { msg.textContent = "Type the player's level."; lvIn.focus(); return; }
-  if (!Number.isFinite(cp) || cp <= 0) { msg.textContent = "Type CP as a number, for example 45000000 or 45M."; cpIn.focus(); return; }
+  if (!/^\d{1,2}$/.test(level) || Number(level) > 30) { msg.textContent = "Level must be a whole number from 0 to 30."; lvIn.focus(); lvIn.select(); return; }
+  if (!Number.isFinite(cp) || cp <= 0) { msg.textContent = "Type CP in millions, for example 45 or 38,5."; cpIn.focus(); return; }
   const existing = findPlayer(name);
   if (existing) { msg.textContent = `${name} is already signed up in ${existing.name}. Remove them there first to move them.`; return; }
   const similar = findSimilar(name);
@@ -799,9 +852,9 @@ teamsEl.addEventListener("submit", e => {
     return;
   }
   pendingSimilar = null;
-  ruins[tid].push({ name, level, cp });
+  ruins[tid].push({ name, level: String(Number(level)), cp });
   saveRuins(); renderRuins();
-  msg.className = "msg ok"; msg.textContent = `${name} added to ${team.name} with ${fmt(cp)} CP.`;
+  msg.className = "msg ok"; msg.textContent = `${name} added to ${team.name} with ${fmtM(cp)} M CP.`;
   nameIn.value = ""; lvIn.value = ""; cpIn.value = ""; nameIn.focus();
 });
 
@@ -837,9 +890,13 @@ function discordText() {
   const lines = ["**Ruins Battlefield – Immortals sign-ups**", ""];
   TEAMS.forEach(t => {
     const list = ruins[t.id].slice().sort((a, b) => b.cp - a.cp);
-    lines.push(`**${t.name}** (${t.note ? t.note.toLowerCase() : "zones " + t.zones}) – ${list.length} ${list.length === 1 ? "player" : "players"} · ${fmt(sumCP(list))} CP`);
+    lines.push(`**${t.name}** (${t.note ? t.note.toLowerCase() : "zones " + t.zones}) – ${list.length} ${list.length === 1 ? "player" : "players"} · ${fmtM(sumCP(list))} M CP`);
     if (!list.length) lines.push("_No players yet_");
-    list.forEach((p, i) => lines.push(`${i + 1}. ${p.name} – Lv ${p.level || "–"} – ${fmt(p.cp)} CP`));
+    list.forEach((p, i) => lines.push(`${i + 1}. ${p.name} – Lv ${p.level || "–"} – ${fmtM(p.cp)} M CP`));
+    if (!t.noSquads && list.length > 1) {
+      lines.push("__Squads__");
+      makeSquads(list).forEach((sq, i) => lines.push(`Squad ${i + 1}: ${sq.map(p => p.name).join(" + ")}${sq.length === 1 ? " (no partner yet)" : ""} – ${fmtM(sumCP(sq))} M CP`));
+    }
     lines.push("");
   });
   return lines.join("\n").trim();
@@ -872,7 +929,7 @@ document.getElementById("ruins-restore").addEventListener("click", () => {
   try {
     const data = JSON.parse(decodeURIComponent(escape(atob(raw.slice(7)))));
     const next = emptyRuins();
-    TEAMS.forEach(t => { (data[t.id] || []).forEach(p => { if (p && typeof p.name === "string" && Number.isFinite(p.cp)) next[t.id].push({ name: p.name.slice(0, 40), level: typeof p.level === "string" ? p.level.slice(0, 8) : "", cp: Math.max(0, Math.round(p.cp)) }); }); });
+    TEAMS.forEach(t => { (data[t.id] || []).forEach(p => { if (p && typeof p.name === "string" && Number.isFinite(p.cp)) next[t.id].push({ name: p.name.slice(0, 40), level: /^\d{1,2}$/.test(String(p.level)) && Number(p.level) <= 30 ? String(Number(p.level)) : "", cp: Math.max(0, Math.round(p.cp)) }); }); });
     ruins = next; saveRuins(); renderRuins();
     const n = TEAMS.reduce((a, t) => a + next[t.id].length, 0);
     backupMsg.className = "msg ok"; backupMsg.textContent = `Restored ${n} sign-ups.`; backupArea.value = "";
