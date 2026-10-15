@@ -245,7 +245,7 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
 }
 .sec-mark { width: 10px; height: 10px; flex: none; transform: rotate(45deg); background: var(--rune); box-shadow: 0 0 10px rgba(63,208,201,.6); }
 .amt-input { font-size: 22px; }
-#simple-tables { gap: 22px; }
+#simple-tables, #simple-top { gap: 22px; }
 
 /* Ruins Battlefield */
 :root { --t-nw: #3fd0c9; --t-sw: #5b9cf5; --t-ne: #f0b54a; --t-se: #e2593a; --t-bh: #b48cf5; }
@@ -471,12 +471,14 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
   <div class="tabpanel" role="tabpanel" id="panel-hero" aria-labelledby="tab-hero" hidden>
     <div class="panel-head">
       <h1>Hero <span class="hl">Upgrade</span></h1>
-      <p class="lede">Fill in what you will spend on your heroes. Each table calculates its own points, and the total for all four is at the bottom.</p>
+      <p class="lede">Fill in what you will spend on your heroes. Each table calculates its own points, and the total for all of them is at the bottom.</p>
     </div>
 
+    <div id="simple-top" class="tabpanel"></div>
+
     <div class="sec">
-    <h2 class="sec-title"><span class="sec-mark"></span>Hero EXP calculator</h2>
-    <section class="panel" aria-label="Hero EXP calculator">
+    <h2 class="sec-title"><span class="sec-mark"></span>Spend 660 Hero EXP</h2>
+    <section class="panel" aria-label="Spend 660 Hero EXP">
       <div class="hero-row">
         <div class="cell">
           <span class="cell-label">Points for every 660 EXP</span>
@@ -508,7 +510,7 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
       <div class="total">
         <div class="total-label">
           <b>Hero Upgrade total</b>
-          <small>All four tables combined</small>
+          <small>All tables combined</small>
         </div>
         <div class="total-value" id="hero-total" aria-live="polite">0</div>
       </div>
@@ -519,7 +521,7 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
       <button type="button" id="hero-example">Load example</button>
     </div>
 
-    <p class="note"><b>Hero EXP:</b> Points = 2 × (Amount EXP (M) × 1 000 000 ÷ 660). Only full blocks of 660 EXP count, so the leftover EXP is shown separately. Decimals work, for example 1.5 for 1 500 000 EXP.<br><b>Recruits and shards:</b> Points = fixed points × amount.<br>“Load example” fills in 6 660 M EXP, 10 vouchers, 2 S+ Shards and 5 S Shards, which adds up to 20 294 318 points.</p>
+    <p class="note"><b>Hero EXP:</b> Points = 2 × (Amount EXP (M) × 1 000 000 ÷ 660). Only full blocks of 660 EXP count, so the leftover EXP is shown separately. Decimals work, for example 1.5 for 1 500 000 EXP.<br><b>Recruits and shards:</b> Points = fixed points × amount.<br>“Load example” fills in 6 660 M EXP, 10 vouchers, 2 S+ Shards, 5 S Shards, 8 A Shards and 50 skill EXP books, which adds up to 20 311 318 points.</p>
   </div>
 
   <div class="tabpanel" role="tabpanel" id="panel-ruins" aria-labelledby="tab-ruins" hidden>
@@ -692,9 +694,12 @@ function calcHero() {
 const SIMPLE = [
   { id: "recruit", title: "Perform 1 Hero Recruit", pts: 3750,  ptsLabel: "Points for every hero recruit", label: "Amount of vouchers",  unit: "vouchers",  ex: 10 },
   { id: "splus",   title: "Use 1 S+ Shard",         pts: 20000, ptsLabel: "Points for every S+ shard",     label: "Amount of S+ Shards", unit: "S+ Shards", ex: 2 },
-  { id: "s",       title: "Use 1 S Shard",          pts: 7000,  ptsLabel: "Points for every S shard",      label: "Amount of S Shards",  unit: "S Shards",  ex: 5 }
+  { id: "s",       title: "Use 1 S Shard",          pts: 7000,  ptsLabel: "Points for every S shard",      label: "Amount of S Shards",  unit: "S Shards",  ex: 5 },
+  { id: "a",       title: "Use 1 A Hero Shard",     pts: 2000,  ptsLabel: "Points for every A Shard",      label: "Amount of A Shards",  unit: "A Shards",  ex: 8 },
+  { id: "book",    title: "Spend 1 skill EXP book", pts: 20,    ptsLabel: "Points for every 1 skill EXP book", label: "Amount of skill EXP books", unit: "skill EXP books", ex: 50 }
 ];
-document.getElementById("simple-tables").innerHTML = SIMPLE.map(t => `
+const TOP_TABLES = ["recruit", "splus"]; // shown above "Spend 660 Hero EXP"
+const simpleHTML = t => `
   <div class="sec">
     <h2 class="sec-title"><span class="sec-mark"></span>${t.title}</h2>
     <section class="panel" aria-label="${t.title}">
@@ -716,7 +721,9 @@ document.getElementById("simple-tables").innerHTML = SIMPLE.map(t => `
         </div>
       </div>
     </section>
-  </div>`).join("");
+  </div>`;
+document.getElementById("simple-top").innerHTML = SIMPLE.filter(t => TOP_TABLES.includes(t.id)).map(simpleHTML).join("");
+document.getElementById("simple-tables").innerHTML = SIMPLE.filter(t => !TOP_TABLES.includes(t.id)).map(simpleHTML).join("");
 
 const simpleIn = SIMPLE.map(t => document.getElementById("amt-" + t.id));
 const lastSimple = SIMPLE.map(() => 0);
