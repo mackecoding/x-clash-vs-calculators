@@ -232,8 +232,9 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
   .hero-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 520px) {
-  .tabs { flex-wrap: nowrap; }
-  .tab { flex: 1 1 0; min-width: 0; font-size: 11.5px; letter-spacing: .06em; padding-inline: 10px; text-align: left; line-height: 1.25; }
+  .tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 0; }
+  .tab { border-bottom: 1px solid var(--line); margin-bottom: 0;
+  min-width: 0; font-size: 11.5px; letter-spacing: .06em; padding-inline: 10px; text-align: left; line-height: 1.25; }
 }
 
 /* Hero Upgrade sections */
@@ -408,6 +409,90 @@ button.primary:hover { background: #63e0da; color: var(--bg); }
 .bal-team .tot b { color: var(--fg); }
 #bal-msg { padding: 0 16px 14px; }
 
+/* Resource Chests */
+:root { --r-leg: #f0b54a; --r-epic: #b48cf5; --r-exc: #5b9cf5; --r-basic: #7fc4a8; --res-wheat: #e8c86a; --res-iron: #a9b8c8; --res-gold: #f0b54a; }
+.res-head, .res-row { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, .8fr) repeat(3, minmax(0, 1fr)); gap: 12px; align-items: center; padding-inline: 18px; }
+.res-head { padding-block: 14px 10px; border-bottom: 1px solid var(--line); font-family: var(--f-display); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.res-head span:nth-child(n+3) { text-align: right; }
+.res-head .rw { color: var(--res-wheat); } .res-head .ri { color: var(--res-iron); } .res-head .rg { color: var(--res-gold); }
+.res-row { padding-block: 12px; border-bottom: 1px solid rgba(38,53,71,.6); transition: background .2s; }
+.res-row.active { background: linear-gradient(90deg, color-mix(in srgb, var(--rc) 10%, transparent), transparent 70%); }
+.res-name { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.gem { width: 30px; height: 30px; flex: none; background: var(--rc); clip-path: polygon(50% 0, 100% 30%, 82% 100%, 18% 100%, 0 30%); box-shadow: 0 0 12px var(--rc); }
+.res-name b { display: block; font-family: var(--f-display); font-weight: 600; letter-spacing: .03em; line-height: 1.2; }
+.res-name small { display: block; font-family: var(--f-num); font-size: 11.5px; color: var(--muted); }
+.res-amt input {
+  width: 100%; background: var(--bg); border: 1px solid var(--line); color: var(--fg);
+  font-family: var(--f-num); font-size: 15px; text-align: right; padding: 8px 10px; border-radius: 3px; -moz-appearance: textfield;
+}
+.res-amt input::-webkit-outer-spin-button, .res-amt input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.res-amt input::placeholder { color: #45566b; }
+.res-amt input:focus { outline: none; border-color: var(--rc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rc) 25%, transparent); }
+.res-val { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 0; }
+.res-val b { display: block; font-size: 15px; }
+.res-val small { display: block; font-size: 11.5px; color: var(--muted); }
+.res-row.active .res-val b { color: var(--fg); }
+.res-val .lbl { display: none; }
+.res-total { display: grid; grid-template-columns: minmax(0, 2.5fr) repeat(3, minmax(0, 1fr)); gap: 12px; align-items: center; padding: 16px 18px; border-top: 1px solid var(--line); background: linear-gradient(90deg, rgba(240,181,74,.05), rgba(240,181,74,.12)); }
+.res-total .total-label b { font-family: var(--f-display); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.res-total .res-val b { font-size: clamp(14px, 2.1vw, 18px); color: var(--gold); }
+.res-total { column-gap: 18px; }
+.res-total .res-val.w b { color: var(--res-wheat); } .res-total .res-val.i b { color: var(--res-iron); } .res-total .res-val.g b { color: var(--res-gold); }
+@media (max-width: 640px) {
+  .res-head { display: none; }
+  .res-row { grid-template-columns: minmax(0, 1fr) 7.5em; row-gap: 10px; }
+  .res-row { grid-template-areas: "name amt" "w w"; }
+  .res-vals { grid-column: 1 / -1; }
+  .res-total { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .res-total .total-label { grid-column: 1 / -1; }
+  .res-total .res-val b, .res-row .res-val b { font-size: 13.5px; }
+  .res-val .lbl { display: block; font-family: var(--f-display); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+}
+.res-cell { display: grid; gap: 4px; justify-items: end; padding: 6px 8px; border: 1px solid transparent; border-radius: 3px; min-width: 0; transition: background .15s, border-color .15s, opacity .15s; }
+.res-cell b { font-size: 14.5px; color: var(--muted); }
+.res-cell.used { border-color: color-mix(in srgb, var(--pc) 70%, var(--line)); background: color-mix(in srgb, var(--pc) 12%, var(--bg)); }
+.res-cell.used b { color: var(--pc); }
+.res-cell.closed { opacity: .35; }
+.res-cell.capped { animation: capflash .6s ease-out; }
+@keyframes capflash { 0% { box-shadow: 0 0 0 2px var(--ember); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.alloc { display: flex; align-items: stretch; gap: 0; }
+.alloc .step {
+  all: unset; box-sizing: border-box; cursor: pointer; width: 26px; display: grid; place-items: center;
+  border: 1px solid var(--line); background: var(--bg-2); color: var(--muted); font-size: 15px; line-height: 1;
+}
+.alloc .step:first-child { border-radius: 3px 0 0 3px; } .alloc .step:last-child { border-radius: 0 3px 3px 0; }
+.alloc .step:hover:not(:disabled) { color: var(--pc); border-color: var(--pc); }
+.alloc .step:focus-visible { outline: 2px solid var(--pc); outline-offset: 1px; }
+.alloc .step:disabled, .all-btn:disabled { opacity: .35; cursor: default; }
+.alloc-in {
+  width: 3.4em; min-width: 0; text-align: center; background: var(--bg); color: var(--fg);
+  border: 1px solid var(--line); border-inline: 0; font-family: var(--f-num); font-size: 14px; padding: 5px 2px; -moz-appearance: textfield;
+}
+.alloc-in::-webkit-outer-spin-button, .alloc-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.alloc-in::placeholder { color: #45566b; }
+.alloc-in:focus { outline: none; border-color: var(--pc); box-shadow: inset 0 0 0 1px var(--pc); }
+.alloc-in:disabled { opacity: .4; }
+.all-btn { all: unset; cursor: pointer; font-family: var(--f-display); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.all-btn:hover:not(:disabled) { color: var(--pc); text-decoration: underline; }
+.all-btn:focus-visible { outline: 2px solid var(--pc); outline-offset: 2px; }
+.res-left { display: block; margin-top: 3px; font-family: var(--f-body); font-size: 12.5px; }
+.res-left.warn { color: var(--gold); }
+.res-left.ok { color: var(--rune); }
+.res-row.needs-pick .res-cell { border-color: color-mix(in srgb, var(--gold) 35%, var(--line)); border-style: dashed; }
+.res-row.needs-pick .res-cell.used { border-style: solid; border-color: color-mix(in srgb, var(--pc) 70%, var(--line)); }
+#res-count.warn { color: var(--gold); }
+@media (max-width: 640px) {
+  .res-cell { justify-items: center; padding: 6px 4px; }
+  .res-cell b { font-size: 12.5px; }
+  .alloc .step { width: 24px; }
+  .alloc-in { width: 2.8em; }
+}
+@media (prefers-reduced-motion: reduce) { .res-cell.capped { animation: none; } }
+.res-vals { display: contents; }
+@media (max-width: 640px) {
+  .res-vals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+}
+
 .note { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 62ch; }
 .note b { color: var(--fg); font-weight: 600; }
 footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); letter-spacing: .14em; text-transform: uppercase; text-align: center; }
@@ -434,6 +519,7 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
   <div class="tabs" role="tablist" aria-label="Calculators">
     <button type="button" class="tab" role="tab" id="tab-chest" aria-controls="panel-chest" aria-selected="true"><span class="dot"></span>Mystic Beast Mark Chest</button>
     <button type="button" class="tab" role="tab" id="tab-hero" aria-controls="panel-hero" aria-selected="false" tabindex="-1"><span class="dot"></span>Hero Upgrade</button>
+    <button type="button" class="tab" role="tab" id="tab-res" aria-controls="panel-res" aria-selected="false" tabindex="-1"><span class="dot"></span>Resource Chests</button>
     <button type="button" class="tab" role="tab" id="tab-ruins" aria-controls="panel-ruins" aria-selected="false" tabindex="-1"><span class="dot"></span>Ruins Battlefield</button>
   </div>
 
@@ -522,6 +608,33 @@ footer { color: #56687d; font-size: 12.5px; font-family: var(--f-display); lette
     </div>
 
     <p class="note"><b>Hero EXP:</b> Points = 2 × (Amount EXP (M) × 1 000 000 ÷ 660). Only full blocks of 660 EXP count, so the leftover EXP is shown separately. Decimals work, for example 1.5 for 1 500 000 EXP.<br><b>Recruits and shards:</b> Points = fixed points × amount.<br>“Load example” fills in 6 660 M EXP, 10 vouchers, 2 S+ Shards, 5 S Shards, 8 A Shards and 50 skill EXP books, which adds up to 20 311 318 points.</p>
+  </div>
+
+  <div class="tabpanel" role="tabpanel" id="panel-res" aria-labelledby="tab-res" hidden>
+    <div class="panel-head">
+      <h1>Resource <span class="hl">Chest</span> calculator</h1>
+      <p class="lede">Enter how many chests of each kind you have, then split them between Wheat, Iron and Gold, for example 4 + 4 + 2 of 10. Each chest gives one resource, and the page never lets you use more chests than you have.</p>
+    </div>
+
+    <section class="panel" aria-label="Resource chest calculator">
+      <div class="res-head" aria-hidden="true">
+        <span>Chest</span><span style="text-align:right">Amount</span><span class="rw">Wheat</span><span class="ri">Iron</span><span class="rg">Gold</span>
+      </div>
+      <div id="res-rows"></div>
+      <div class="res-total">
+        <div class="total-label"><b>Total</b><small id="res-count">0 chests</small></div>
+        <div class="res-val w"><span class="lbl">Wheat</span><b id="res-tw">0</b><small id="res-tws">&nbsp;</small></div>
+        <div class="res-val i"><span class="lbl">Iron</span><b id="res-ti">0</b><small id="res-tis">&nbsp;</small></div>
+        <div class="res-val g"><span class="lbl">Gold</span><b id="res-tg">0</b><small id="res-tgs">&nbsp;</small></div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button type="button" id="res-clear" class="primary">Clear all</button>
+      <button type="button" id="res-example">Load example</button>
+    </div>
+
+    <p class="note"><b>Per chest:</b> Legendary 3.7 M Wheat / 3.7 M Iron / 2.2 M Gold · Epic 1.2 M / 1.2 M / 740 K · Excellent 154.6 K / 154.6 K / 92.5 K · Resource 10 K / 10 K / 6 K. Use − and + or type a number for each resource. “All Wheat”, “All Iron” and “All Gold” put every chest of that kind on one resource. “Load example” fills in 10 Legendary (4 Wheat, 4 Iron, 2 Gold), 5 Epic (Wheat), 20 Excellent (10 Iron, 10 Gold) and 50 Resource Chests (Wheat).</p>
   </div>
 
   <div class="tabpanel" role="tabpanel" id="panel-ruins" aria-labelledby="tab-ruins" hidden>
@@ -1193,6 +1306,127 @@ balApply.addEventListener("click", () => {
   document.querySelector("#panel-ruins .map").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
 });
 renderPool();
+
+/* ---- Resource Chests ---- */
+const RES_CHESTS = [
+  { id: "leg",   name: "Legendary Resource Chest", tag: "Gold",   c: "--r-leg",   wheat: 3700000, iron: 3700000, gold: 2200000, ex: 10, exAlloc: { wheat: 4, iron: 4, gold: 2 } },
+  { id: "epic",  name: "Epic Resource Chest",      tag: "Purple", c: "--r-epic",  wheat: 1200000, iron: 1200000, gold: 740000,  ex: 5,  exAlloc: { wheat: 5, iron: 0, gold: 0 } },
+  { id: "exc",   name: "Excellent Resource Chest", tag: "Blue",   c: "--r-exc",   wheat: 154600,  iron: 154600,  gold: 92500,   ex: 20, exAlloc: { wheat: 0, iron: 10, gold: 10 } },
+  { id: "basic", name: "Resource Chest",           tag: "Blue",   c: "--r-basic", wheat: 10000,   iron: 10000,   gold: 6000,    ex: 50, exAlloc: { wheat: 50, iron: 0, gold: 0 } }
+];
+const RES = ["wheat", "iron", "gold"];
+const RES_LABEL = { wheat: "Wheat", iron: "Iron", gold: "Gold" };
+const fmt1r = v => v.toLocaleString("sv-SE", { maximumFractionDigits: 2 }).replace(/ /g, " ");
+const shortRes = n => n >= 1e9 ? fmt1r(n / 1e9) + " B" : n >= 1e6 ? fmt1r(n / 1e6) + " M" : n >= 1e3 ? fmt1r(n / 1e3) + " K" : String(n);
+const resAlloc = Object.fromEntries(RES_CHESTS.map(c => [c.id, { wheat: 0, iron: 0, gold: 0 }]));
+
+document.getElementById("res-rows").innerHTML = RES_CHESTS.map(c => `
+  <div class="res-row" id="resrow-${c.id}" style="--rc:var(${c.c})">
+    <div class="res-name"><span class="gem" aria-hidden="true"></span><span><b>${c.name} <span style="color:var(${c.c})">(${c.tag})</span></b><small>${shortRes(c.wheat)} · ${shortRes(c.iron)} · ${shortRes(c.gold)} per chest</small><small class="res-left" id="resleft-${c.id}"></small></span></div>
+    <div class="res-amt"><input id="resamt-${c.id}" type="number" inputmode="numeric" min="0" step="1" placeholder="0" aria-label="Amount of ${c.name} (${c.tag})"></div>
+    <div class="res-vals">
+      ${RES.map(r => `<div class="res-val res-cell" data-res="${r}" style="--pc:var(--res-${r})">
+        <span class="lbl">${RES_LABEL[r]}</span>
+        <div class="alloc">
+          <button type="button" class="step" data-chest="${c.id}" data-res="${r}" data-d="-1" aria-label="One less ${c.name} for ${RES_LABEL[r]}">−</button>
+          <input class="alloc-in" id="al-${c.id}-${r}" data-chest="${c.id}" data-res="${r}" type="number" inputmode="numeric" min="0" step="1" placeholder="0" aria-label="${c.name} chests used for ${RES_LABEL[r]}">
+          <button type="button" class="step" data-chest="${c.id}" data-res="${r}" data-d="1" aria-label="One more ${c.name} for ${RES_LABEL[r]}">+</button>
+        </div>
+        <b id="resv-${c.id}-${r}">0</b>
+        <button type="button" class="all-btn" data-chest="${c.id}" data-res="${r}">All ${RES_LABEL[r]}</button>
+      </div>`).join("")}
+    </div>
+  </div>`).join("");
+
+const resInputs = RES_CHESTS.map(c => document.getElementById("resamt-" + c.id));
+const amtOf = k => { const raw = resInputs[k].value.trim(); return raw === "" ? 0 : Math.max(0, Math.floor(Number(raw)) || 0); };
+const usedOf = id => RES.reduce((a, r) => a + resAlloc[id][r], 0);
+// when the chest count drops below what is allocated, take chests back from Gold, then Iron, then Wheat
+function fitAlloc(c, amt) {
+  let over = usedOf(c.id) - amt;
+  for (const r of ["gold", "iron", "wheat"]) { if (over <= 0) break; const take = Math.min(over, resAlloc[c.id][r]); resAlloc[c.id][r] -= take; over -= take; }
+}
+function calcRes() {
+  const tot = { wheat: 0, iron: 0, gold: 0 }; let n = 0, openTypes = 0, openChests = 0;
+  RES_CHESTS.forEach((c, k) => {
+    const amt = amtOf(k); n += amt;
+    fitAlloc(c, amt);
+    const used = usedOf(c.id), left = amt - used;
+    RES.forEach(r => {
+      const q = resAlloc[c.id][r], val = q * c[r];
+      tot[r] += val;
+      const inp = document.getElementById(`al-${c.id}-${r}`);
+      if (document.activeElement !== inp) inp.value = q ? q : "";
+      inp.disabled = amt === 0;
+      document.getElementById(`resv-${c.id}-${r}`).textContent = fmt(val);
+      const cell = inp.closest(".res-cell");
+      cell.classList.toggle("used", q > 0);
+      cell.classList.toggle("closed", amt > 0 && left === 0 && q === 0);
+      cell.querySelectorAll(".step, .all-btn").forEach(btn => btn.disabled = amt === 0);
+    });
+    const row = document.getElementById("resrow-" + c.id), leftEl = document.getElementById("resleft-" + c.id);
+    row.classList.toggle("active", amt > 0 && left === 0);
+    row.classList.toggle("needs-pick", left > 0);
+    if (amt === 0) leftEl.textContent = "";
+    else if (left > 0) { leftEl.textContent = `${left} of ${amt} chests left to allocate`; leftEl.className = "res-left warn"; openTypes++; openChests += left; }
+    else { leftEl.textContent = `All ${amt} chests allocated ✓`; leftEl.className = "res-left ok"; }
+  });
+  document.getElementById("res-tw").textContent = fmt(tot.wheat); document.getElementById("res-tws").textContent = tot.wheat ? "≈ " + shortRes(tot.wheat) : " ";
+  document.getElementById("res-ti").textContent = fmt(tot.iron); document.getElementById("res-tis").textContent = tot.iron ? "≈ " + shortRes(tot.iron) : " ";
+  document.getElementById("res-tg").textContent = fmt(tot.gold); document.getElementById("res-tgs").textContent = tot.gold ? "≈ " + shortRes(tot.gold) : " ";
+  const cnt = document.getElementById("res-count");
+  cnt.textContent = openChests ? `${openChests} chest${openChests === 1 ? "" : "s"} not allocated yet` : fmt(n) + (n === 1 ? " chest" : " chests");
+  cnt.classList.toggle("warn", openChests > 0);
+  try { localStorage.setItem("res-amounts", JSON.stringify(resInputs.map(x => x.value))); localStorage.setItem("res-alloc", JSON.stringify(resAlloc)); } catch (e) {}
+}
+// set one allocation, never more than the chests that are free
+function setAlloc(id, r, want) {
+  const k = RES_CHESTS.findIndex(c => c.id === id), amt = amtOf(k);
+  const others = usedOf(id) - resAlloc[id][r];
+  const v = Math.max(0, Math.min(Math.floor(want) || 0, amt - others));
+  resAlloc[id][r] = v;
+  return v < want ? amt - others : null; // returns the cap when the wish was too big
+}
+resInputs.forEach(inp => {
+  inp.addEventListener("input", calcRes);
+  inp.addEventListener("keydown", e => { if (e.key === "-" || e.key === "e" || e.key === "," || e.key === ".") e.preventDefault(); });
+});
+const resRows = document.getElementById("res-rows");
+resRows.addEventListener("input", e => {
+  const inp = e.target.closest(".alloc-in"); if (!inp) return;
+  const capped = setAlloc(inp.dataset.chest, inp.dataset.res, Number(inp.value || 0));
+  if (capped !== null) { inp.value = capped || ""; flashCap(inp); }
+  calcRes();
+});
+resRows.addEventListener("focusout", e => { if (e.target.closest(".alloc-in")) calcRes(); });
+resRows.addEventListener("keydown", e => { if (e.target.closest(".alloc-in") && (e.key === "-" || e.key === "e" || e.key === "," || e.key === ".")) e.preventDefault(); });
+resRows.addEventListener("click", e => {
+  const st = e.target.closest(".step"), all = e.target.closest(".all-btn");
+  if (st) {
+    const { chest, res } = st.dataset;
+    const capped = setAlloc(chest, res, resAlloc[chest][res] + Number(st.dataset.d));
+    if (capped !== null && Number(st.dataset.d) > 0) flashCap(document.getElementById(`al-${chest}-${res}`));
+    calcRes();
+  } else if (all) {
+    const { chest, res } = all.dataset, k = RES_CHESTS.findIndex(c => c.id === chest);
+    RES.forEach(r => resAlloc[chest][r] = r === res ? amtOf(k) : 0);
+    calcRes();
+  }
+});
+function flashCap(el) { const cell = el.closest(".res-cell"); cell.classList.remove("capped"); void cell.offsetWidth; cell.classList.add("capped"); }
+
+document.getElementById("res-clear").addEventListener("click", () => { resInputs.forEach(x => x.value = ""); RES_CHESTS.forEach(c => RES.forEach(r => resAlloc[c.id][r] = 0)); calcRes(); resInputs[0].focus(); });
+document.getElementById("res-example").addEventListener("click", () => { RES_CHESTS.forEach((c, k) => { resInputs[k].value = c.ex; Object.assign(resAlloc[c.id], c.exAlloc); }); calcRes(); });
+try {
+  const sv = JSON.parse(localStorage.getItem("res-amounts") || "null"); if (Array.isArray(sv)) sv.forEach((v, k) => { if (resInputs[k]) resInputs[k].value = v; });
+  const sa = JSON.parse(localStorage.getItem("res-alloc") || "null");
+  if (sa) RES_CHESTS.forEach(c => RES.forEach(r => { const v = Math.floor(Number(sa[c.id] && sa[c.id][r])); if (v > 0) resAlloc[c.id][r] = v; }));
+  else { // carry over choices made with the earlier "pick one" version
+    const sc = JSON.parse(localStorage.getItem("res-choice") || "null");
+    if (sc) RES_CHESTS.forEach((c, k) => { if (RES.includes(sc[c.id])) resAlloc[c.id][sc[c.id]] = amtOf(k); });
+  }
+} catch (e) {}
+calcRes();
 
 /* ---- Tabs ---- */
 const tabs = [...document.querySelectorAll('[role="tab"]')];
